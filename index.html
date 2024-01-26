@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Omniverse</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
+    <script>
+      const points = []
+      const lines = []
+      const particles = []
+
+      const dimension = 800
+      let particleAmount,
+        particleSpeed,
+        wavesSize,
+        particleHue,
+        particleSaturation,
+        particleBrightness,
+        lineHue,
+        linesSaturation,
+        linesBrightness,
+        linesLimit,
+        lineLength,
+        drawPoints,
+        waves,
+        pointAlphaMin
+      let rotation = 0
+      let pointsLimit = 0
+      const drawLines = true
+      let animate = true
+
+      function setup() {
+        createCanvas(dimension, dimension, WEBGL)
+        colorMode(HSB, 359, 99, 99, 255)
+
+        particleAmount = random(50, 200)
+        particleSpeed = random(1, 7)
+        wavesSize = random(10, 600)
+        particleHue = random(0, 359)
+        particleSaturation = random(70, 99)
+        particleBrightness = random(60, 99)
+        lineHue = random(0, 359)
+        linesSaturation = random(70, 99)
+        linesBrightness = random(60, 99)
+        linesLimit = random(8000, 17000)
+        lineLength = random(dimension / 24, (dimension / 24) * 8)
+        drawPoints = randomChoice()
+        waves = randomChoice()
+        pointsLimit = map(particleAmount, 0, 200, 25000, 15000)
+        pointAlphaMin = random(20, 90)
+
+        for (let i = 0; i < particleAmount; i++) {
+          particles.push(new Particle(random(0, dimension), random(0, dimension), random(-dimension, dimension), i))
+        }
+      }
+
+      function draw() {
+        background(0)
+        orbitControl()
+
+        if (mouseIsPressed) {
+          rotation += 0.001
+        }
+        if (rotation > 2) {
+          rotation = 0
+        }
+
+        push()
+        rotateY(rotation * PI)
+        translate(-dimension / 2, -dimension / 2, -dimension / 2)
+
+        if (animate) {
+          for (const particle of particles) {
+            particle.update()
+          }
+        }
+
+        if (points.length > pointsLimit) {
+          for (let i = 0; i < points.length - pointsLimit; i++) {
+            points.pop()
+          }
+        }
+        if (lines.length > linesLimit) {
+          for (let i = 0; i < lines.length - linesLimit; i++) {
+            lines.pop()
+          }
+        }
+
+        for (const point of points) {
+          if (animate) {
+            point.updateWaveValue()
+            point.updateAlpha()
+          }
+          if (drawPoints) {
+            point.display()
+          }
+        }
+        for (const line of lines) {
+          if (animate) {
+            line.updateWaveValue()
+          }
+          if (drawLines) {
+            line.display()
+          }
+        }
+
+        pop()
+      }
+
+      function keyPressed() {
+        if (key === ' ') {
+          animate = !animate
+        }
+      }
+
+      class Particle {
+        constructor(virtualX, virtualY, virtualZ, id) {
+          this.virtualX = virtualX
+          this.virtualY = virtualY
+          this.virtualZ = virtualZ
+          this.id = id
+          this.x = this.y = this.z = 0
+        }
+
+        update() {
+          const speed = map(particleSpeed, 1, 10, 0.001, 0.01)
+          this.x = noise(this.virtualX) * dimension
+          this.y = noise(this.virtualY) * dimension
+          this.z = noise(this.virtualZ) * dimension
+          this.virtualX += speed
+          this.virtualY += speed
+          this.virtualZ += speed
+
+          points.unshift(new Point(this.x, this.y, this.z, this.id))
+
+          for (let i = this.id + 1; i < particles.length; i++) {
+            const d = dist(this.x, this.y, this.z, particles[i].x, particles[i].y, particles[i].z)
+            if ((lineLength < dimension / 4.8 && d < lineLength) || (lineLength > dimension / 4.8 && d > lineLength)) {
+              lines.unshift(new Line(this.x, this.y, this.z, particles[i].x, particles[i].y, particles[i].z, this.id))
+            }
+          }
+        }
+      }
+
+      class GraphicPrimitive {
+        constructor() {
+          this.waveIndex = 0
+          this.wave = 0
+        }
+
+        updateWaveValue() {
+          this.waveIndex++
+          this.wave = sin(this.waveIndex)
+        }
+      }
+
+      class Point extends GraphicPrimitive {
+        constructor(x, y, z, id) {
+          super()
+          this.x = x
+          this.y = y
+          this.z = z
+          this.id = id
+          this.alpha = random(pointAlphaMin, 100)
+        }
+
+        updateAlpha() {
+          this.alpha = random(pointAlphaMin, 100)
+        }
+
+        display() {
+          strokeWeight(3)
+          stroke(particleHue, particleSaturation, particleBrightness, this.alpha)
+          push()
+          if (waves && wavesSize !== 0) {
+            rotate((this.wave / (1000 - wavesSize)) * PI)
+          }
+          point(this.x, this.y, this.z)
+          pop()
+        }
+      }
+
+      class Line extends GraphicPrimitive {
+        constructor(x1, y1, z1, x2, y2, z2, id) {
+          super()
+          this.x1 = x1
+          this.y1 = y1
+          this.z1 = z1
+          this.x2 = x2
+          this.y2 = y2
+          this.z2 = z2
+          this.id = id
+        }
+
+        display() {
+          strokeWeight(1)
+          stroke(lineHue, linesSaturation, linesBrightness, 30)
+          push()
+          if (waves && wavesSize !== 0) {
+            rotate((this.wave / (1000 - wavesSize)) * PI)
+          }
+          line(this.x1, this.y1, this.z1, this.x2, this.y2, this.z2)
+          pop()
+        }
+      }
+
+      function randomChoice() {
+        return random(0, 1) > 0.5
+      }
+    </script>
+  </body>
+</html>
