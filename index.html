@@ -48,7 +48,7 @@
         createCanvas(dimension, dimension, WEBGL)
         colorMode(HSB, 359, 99, 99, 255)
 
-        particleAmount = random(50, 200)
+        particleAmount = random(50, 150)
         particleSpeed = random(1, 7)
         wavesSize = random(10, 600)
         particleHue = random(0, 359)
@@ -57,11 +57,11 @@
         lineHue = random(0, 359)
         linesSaturation = random(70, 99)
         linesBrightness = random(60, 99)
-        linesLimit = random(8000, 17000)
-        lineLength = random(dimension / 24, (dimension / 24) * 8)
+        lineLength = random(dimension / 24, (dimension / 24) * 4)
         drawPoints = randomChoice()
         waves = randomChoice()
-        pointsLimit = map(particleAmount, 0, 200, 25000, 15000)
+        pointsLimit = map(particleAmount, 0, 150, 15000, 5000)
+        linesLimit = random(5000, 10000)
         pointAlphaMin = random(20, 90)
 
         for (let i = 0; i < particleAmount; i++) {
