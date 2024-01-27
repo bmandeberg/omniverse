@@ -38,7 +38,8 @@
         lineLength,
         drawPoints,
         waves,
-        pointAlphaMin
+        pointAlphaMin,
+        colorGradientAmount
       let rotation = 0
       let pointsLimit = 0
       const drawLines = true
@@ -63,6 +64,7 @@
         pointsLimit = map(particleAmount, 0, 150, 15000, 5000)
         linesLimit = random(5000, 10000)
         pointAlphaMin = random(20, 90)
+        colorGradientAmount = random(0, 150)
 
         for (let i = 0; i < particleAmount; i++) {
           particles.push(new Particle(random(0, dimension), random(0, dimension), random(-dimension, dimension), i))
@@ -74,7 +76,7 @@
         orbitControl()
 
         if (mouseIsPressed) {
-          rotation += 0.001
+          rotation += 0.007
         }
         if (rotation > 2) {
           rotation = 0
@@ -185,7 +187,15 @@
 
         display() {
           strokeWeight(3)
-          stroke(particleHue, particleSaturation, particleBrightness, this.alpha)
+          const hueShift = map(
+            dist(this.x, this.y, this.z, dimension / 2, dimension / 2, dimension / 2),
+            0,
+            dimension / 2 - 100,
+            0,
+            colorGradientAmount
+          )
+          const hue = abs(particleHue - hueShift)
+          stroke(hue, particleSaturation, particleBrightness, this.alpha)
           push()
           if (waves && wavesSize !== 0) {
             rotate((this.wave / (1000 - wavesSize)) * PI)
@@ -209,7 +219,15 @@
 
         display() {
           strokeWeight(1)
-          stroke(lineHue, linesSaturation, linesBrightness, 30)
+          const hueShift = map(
+            dist(this.x1, this.y1, this.z1, dimension / 2, dimension / 2, dimension / 2),
+            0,
+            dimension / 2 - 100,
+            0,
+            colorGradientAmount
+          )
+          const hue = abs(lineHue - hueShift)
+          stroke(hue, linesSaturation, linesBrightness, 30)
           push()
           if (waves && wavesSize !== 0) {
             rotate((this.wave / (1000 - wavesSize)) * PI)
