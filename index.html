@@ -75,8 +75,8 @@
         background(0)
         orbitControl()
 
-        if (mouseIsPressed) {
-          rotation += 0.007
+        if (!mouseIsPressed) {
+          rotation += 0.002
         }
         if (rotation > 2) {
           rotation = 0
